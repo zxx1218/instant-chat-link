@@ -6,11 +6,19 @@ import { ChatInput } from "./ChatInput";
 import { TypingIndicator } from "./TypingIndicator";
 import { generateUserId } from "@/lib/generateRoomId";
 
+interface FileData {
+  name: string;
+  type: string;
+  data: string;
+  isImage: boolean;
+}
+
 interface Message {
   id: string;
   content: string;
   senderId: string;
   timestamp: Date;
+  file?: FileData;
 }
 
 interface ChatRoomProps {
@@ -53,6 +61,7 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
         content: payload.content,
         senderId: payload.senderId,
         timestamp: new Date(payload.timestamp),
+        file: payload.file,
       };
       setMessages((prev) => [...prev, newMessage]);
     });
@@ -116,6 +125,33 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
     [userId]
   );
 
+  const sendFile = useCallback(
+    (file: FileData) => {
+      if (!channelRef.current) return;
+
+      const message = {
+        id: `${Date.now()}_${Math.random().toString(36).substring(2)}`,
+        content: "",
+        senderId: userId,
+        timestamp: new Date().toISOString(),
+        file,
+      };
+
+      channelRef.current.send({
+        type: "broadcast",
+        event: "message",
+        payload: message,
+      });
+
+      // Add message locally immediately
+      setMessages((prev) => [
+        ...prev,
+        { ...message, timestamp: new Date(message.timestamp) },
+      ]);
+    },
+    [userId]
+  );
+
   const handleTyping = useCallback(() => {
     if (!channelRef.current) return;
 
@@ -145,13 +181,14 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
             content={message.content}
             isSelf={message.senderId === userId}
             timestamp={message.timestamp}
+            file={message.file}
           />
         ))}
         {isTyping && <TypingIndicator />}
         <div ref={messagesEndRef} />
       </div>
 
-      <ChatInput onSendMessage={sendMessage} onTyping={handleTyping} />
+      <ChatInput onSendMessage={sendMessage} onSendFile={sendFile} onTyping={handleTyping} />
     </div>
   );
 }
