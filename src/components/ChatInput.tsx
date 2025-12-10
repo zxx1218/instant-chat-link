@@ -1,16 +1,22 @@
 import { useState, useRef, useEffect } from "react";
-import { Send } from "lucide-react";
+import { Send, Image, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
+  onSendFile: (file: { name: string; type: string; data: string; isImage: boolean }) => void;
   onTyping: () => void;
   disabled?: boolean;
 }
 
-export function ChatInput({ onSendMessage, onTyping, disabled }: ChatInputProps) {
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+export function ChatInput({ onSendMessage, onSendFile, onTyping, disabled }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,12 +47,77 @@ export function ChatInput({ onSendMessage, onTyping, disabled }: ChatInputProps)
     }
   };
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>, isImage: boolean) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("文件大小不能超过 5MB");
+      return;
+    }
+
+    try {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        onSendFile({
+          name: file.name,
+          type: file.type,
+          data: base64,
+          isImage: isImage && file.type.startsWith("image/")
+        });
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      toast.error("文件读取失败");
+    }
+
+    // Reset input
+    e.target.value = "";
+  };
+
   useEffect(() => {
     textareaRef.current?.focus();
   }, []);
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-end gap-3 p-4 glass rounded-2xl">
+    <form onSubmit={handleSubmit} className="flex items-end gap-2 p-4 glass rounded-2xl">
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => handleFileSelect(e, true)}
+      />
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={(e) => handleFileSelect(e, false)}
+      />
+      
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        disabled={disabled}
+        onClick={() => imageInputRef.current?.click()}
+        className="shrink-0 text-muted-foreground hover:text-foreground"
+      >
+        <Image className="w-4 h-4" />
+      </Button>
+      
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        disabled={disabled}
+        onClick={() => fileInputRef.current?.click()}
+        className="shrink-0 text-muted-foreground hover:text-foreground"
+      >
+        <Paperclip className="w-4 h-4" />
+      </Button>
+      
       <textarea
         ref={textareaRef}
         value={message}
