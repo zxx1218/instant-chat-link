@@ -1,11 +1,12 @@
 import { cn } from "@/lib/utils";
-import { FileIcon, Download } from "lucide-react";
+import { FileIcon, Download, Check, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ChatMessageProps {
   content: string;
   isSelf: boolean;
   timestamp: Date;
+  isRead?: boolean;
   file?: {
     name: string;
     type: string;
@@ -14,7 +15,7 @@ interface ChatMessageProps {
   };
 }
 
-export function ChatMessage({ content, isSelf, timestamp, file }: ChatMessageProps) {
+export function ChatMessage({ content, isSelf, timestamp, isRead, file }: ChatMessageProps) {
   const handleDownload = () => {
     if (!file) return;
     
@@ -76,14 +77,23 @@ export function ChatMessage({ content, isSelf, timestamp, file }: ChatMessagePro
             {content}
           </p>
         )}
-        <p
+        <div
           className={cn(
-            "text-[10px] mt-1 opacity-60",
-            isSelf ? "text-right" : "text-left"
+            "flex items-center gap-1 mt-1",
+            isSelf ? "justify-end" : "justify-start"
           )}
         >
-          {timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-        </p>
+          <span className="text-[10px] opacity-60">
+            {timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </span>
+          {isSelf && (
+            isRead ? (
+              <CheckCheck className="w-3.5 h-3.5 text-primary" />
+            ) : (
+              <Check className="w-3.5 h-3.5 opacity-60" />
+            )
+          )}
+        </div>
       </div>
     </div>
   );

@@ -19,6 +19,7 @@ interface Message {
   senderId: string;
   timestamp: Date;
   file?: FileData;
+  isRead?: boolean;
 }
 
 interface ChatRoomProps {
@@ -62,8 +63,29 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
         senderId: payload.senderId,
         timestamp: new Date(payload.timestamp),
         file: payload.file,
+        isRead: false,
       };
       setMessages((prev) => [...prev, newMessage]);
+      
+      // Send read receipt if message is from someone else
+      if (payload.senderId !== userId) {
+        channel.send({
+          type: "broadcast",
+          event: "read",
+          payload: { messageIds: [payload.id], readerId: userId },
+        });
+      }
+    });
+
+    // Handle read receipts
+    channel.on("broadcast", { event: "read" }, ({ payload }) => {
+      if (payload.readerId !== userId) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            payload.messageIds.includes(msg.id) ? { ...msg, isRead: true } : msg
+          )
+        );
+      }
     });
 
     // Handle typing indicator
@@ -182,6 +204,7 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
             isSelf={message.senderId === userId}
             timestamp={message.timestamp}
             file={message.file}
+            isRead={message.isRead}
           />
         ))}
         {isTyping && <TypingIndicator />}
