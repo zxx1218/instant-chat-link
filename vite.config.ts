@@ -7,7 +7,9 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 9050,
+    // 添加允许的主机列表，包含需要放行的所有域名
+    allowedHosts: ['fortunefreedom.top','jk.fortunefreedom.top', 'localhost', 'chsiii.cn']
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {

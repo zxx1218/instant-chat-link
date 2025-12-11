@@ -13,10 +13,31 @@ export function ChatHeader({ roomId, onlineCount }: ChatHeaderProps) {
 
   const copyLink = async () => {
     const link = `${window.location.origin}/chat/${roomId}`;
-    await navigator.clipboard.writeText(link);
-    setCopied(true);
-    toast.success("链接已复制！发送给对方即可开始聊天");
-    setTimeout(() => setCopied(false), 2000);
+    
+    try {
+      // 优先使用现代 Clipboard API
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(link);
+      } else {
+        // 降级方案：使用传统的 execCommand
+        const textArea = document.createElement("textarea");
+        textArea.value = link;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+      setCopied(true);
+      toast.success("链接已复制！发送给对方即可开始聊天");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast.error("复制失败，请手动复制链接");
+      console.error("复制失败:", err);
+    }
   };
 
   return (
