@@ -50,9 +50,10 @@ export function ChatHeader({ roomId, onlineCount, roomName, onRoomNameChange }: 
     const link = `${window.location.origin}/chat/${roomId}`;
     
     try {
+      // 优先使用现代 Clipboard API
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(link);
-      } else {
+      } else { // 降级方案：使用传统的 execCommand
         const textArea = document.createElement("textarea");
         textArea.value = link;
         textArea.style.position = "fixed";
