@@ -31,6 +31,7 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
   const [onlineCount, setOnlineCount] = useState(1);
   const [isTyping, setIsTyping] = useState(false);
   const [userId] = useState(() => generateUserId());
+  const [roomName, setRoomName] = useState("临时聊天室");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -105,6 +106,11 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
     channel.on("presence", { event: "sync" }, () => {
       const state = channel.presenceState();
       setOnlineCount(Object.keys(state).length);
+    });
+
+    // Handle room name changes
+    channel.on("broadcast", { event: "roomName" }, ({ payload }) => {
+      setRoomName(payload.name);
     });
 
     channel.subscribe(async (status) => {
@@ -184,9 +190,25 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
     });
   }, [userId]);
 
+  const handleRoomNameChange = useCallback((name: string) => {
+    if (!channelRef.current) return;
+    
+    setRoomName(name);
+    channelRef.current.send({
+      type: "broadcast",
+      event: "roomName",
+      payload: { name },
+    });
+  }, []);
+
   return (
     <div className="flex flex-col h-screen max-w-2xl mx-auto p-4 gap-4">
-      <ChatHeader roomId={roomId} onlineCount={onlineCount} />
+      <ChatHeader 
+        roomId={roomId} 
+        onlineCount={onlineCount} 
+        roomName={roomName}
+        onRoomNameChange={handleRoomNameChange}
+      />
       
       <div className="flex-1 overflow-y-auto scrollbar-thin space-y-3 px-1">
         {messages.length === 0 && (

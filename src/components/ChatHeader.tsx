@@ -1,25 +1,58 @@
-import { Copy, Check, Users } from "lucide-react";
-import { useState } from "react";
+import { Copy, Check, Users, Pencil } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 interface ChatHeaderProps {
   roomId: string;
   onlineCount: number;
+  roomName: string;
+  onRoomNameChange: (name: string) => void;
 }
 
-export function ChatHeader({ roomId, onlineCount }: ChatHeaderProps) {
+export function ChatHeader({ roomId, onlineCount, roomName, onRoomNameChange }: ChatHeaderProps) {
   const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(roomName);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setEditValue(roomName);
+  }, [roomName]);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const handleSave = () => {
+    const trimmed = editValue.trim();
+    if (trimmed && trimmed !== roomName) {
+      onRoomNameChange(trimmed);
+      toast.success("房间名称已更新");
+    }
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSave();
+    } else if (e.key === "Escape") {
+      setEditValue(roomName);
+      setIsEditing(false);
+    }
+  };
 
   const copyLink = async () => {
     const link = `${window.location.origin}/chat/${roomId}`;
     
     try {
-      // 优先使用现代 Clipboard API
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(link);
       } else {
-        // 降级方案：使用传统的 execCommand
         const textArea = document.createElement("textarea");
         textArea.value = link;
         textArea.style.position = "fixed";
@@ -47,7 +80,27 @@ export function ChatHeader({ roomId, onlineCount }: ChatHeaderProps) {
           <Users className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <h1 className="font-semibold text-foreground">临时聊天室</h1>
+          {isEditing ? (
+            <Input
+              ref={inputRef}
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={handleSave}
+              onKeyDown={handleKeyDown}
+              className="h-7 w-40 text-sm font-semibold"
+              maxLength={20}
+            />
+          ) : (
+            <div className="flex items-center gap-1.5 group">
+              <h1 className="font-semibold text-foreground">{roomName}</h1>
+              <button
+                onClick={() => setIsEditing(true)}
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-muted rounded"
+              >
+                <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
+            </div>
+          )}
           <p className="text-xs text-muted-foreground flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             {onlineCount} 人在线
