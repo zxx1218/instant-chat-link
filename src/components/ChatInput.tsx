@@ -10,7 +10,7 @@ interface ChatInputProps {
   disabled?: boolean;
 }
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
 
 export function ChatInput({ onSendMessage, onSendFile, onTyping, disabled }: ChatInputProps) {
   const [message, setMessage] = useState("");
@@ -50,11 +50,6 @@ export function ChatInput({ onSendMessage, onSendFile, onTyping, disabled }: Cha
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>, isImage: boolean) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error("文件大小不能超过 5MB");
-      return;
-    }
 
     try {
       const reader = new FileReader();
