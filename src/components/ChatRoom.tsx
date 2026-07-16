@@ -29,6 +29,10 @@ interface ChatRoomProps {
 export function ChatRoom({ roomId }: ChatRoomProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [onlineCount, setOnlineCount] = useState(1);
+  const [peerOnline, setPeerOnline] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<
+    "connecting" | "connected" | "disconnected" | "error"
+  >("connecting");
   const [isTyping, setIsTyping] = useState(false);
   const [userId] = useState(() => generateUserId());
   const [roomName, setRoomName] = useState("临时聊天室");
@@ -99,7 +103,9 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
 
     channel.on("presence", { event: "sync" }, () => {
       const state = channel.presenceState();
-      setOnlineCount(Object.keys(state).length);
+      const keys = Object.keys(state);
+      setOnlineCount(keys.length);
+      setPeerOnline(keys.some((k) => k !== userId));
     });
 
     channel.on("broadcast", { event: "roomName" }, ({ payload }) => {
@@ -108,7 +114,12 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
 
     channel.subscribe(async (status) => {
       if (status === "SUBSCRIBED") {
+        setConnectionStatus("connected");
         await channel.track({ online_at: new Date().toISOString() });
+      } else if (status === "CHANNEL_ERROR") {
+        setConnectionStatus("error");
+      } else if (status === "TIMED_OUT" || status === "CLOSED") {
+        setConnectionStatus("disconnected");
       }
     });
 
@@ -197,6 +208,8 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
       <ChatHeader
         roomId={roomId}
         onlineCount={onlineCount}
+        peerOnline={peerOnline}
+        connectionStatus={connectionStatus}
         roomName={roomName}
         onRoomNameChange={handleRoomNameChange}
       />
