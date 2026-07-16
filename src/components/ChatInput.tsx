@@ -76,7 +76,7 @@ export function ChatInput({ onSendMessage, onSendFile, onTyping, disabled }: Cha
   }, []);
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-end gap-2 p-4 glass rounded-2xl">
+    <form onSubmit={handleSubmit} className="flex items-end gap-1.5 sm:gap-2 p-2.5 sm:p-4 glass rounded-2xl">
       <input
         ref={imageInputRef}
         type="file"
