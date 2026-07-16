@@ -208,6 +208,8 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
       <ChatHeader
         roomId={roomId}
         onlineCount={onlineCount}
+        peerOnline={peerOnline}
+        connectionStatus={connectionStatus}
         roomName={roomName}
         onRoomNameChange={handleRoomNameChange}
       />
