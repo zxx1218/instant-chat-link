@@ -8,11 +8,13 @@ import { toast } from "sonner";
 interface ChatHeaderProps {
   roomId: string;
   onlineCount: number;
+  peerOnline: boolean;
+  connectionStatus: "connecting" | "connected" | "disconnected" | "error";
   roomName: string;
   onRoomNameChange: (name: string) => void;
 }
 
-export function ChatHeader({ roomId, onlineCount, roomName, onRoomNameChange }: ChatHeaderProps) {
+export function ChatHeader({ roomId, onlineCount, peerOnline, connectionStatus, roomName, onRoomNameChange }: ChatHeaderProps) {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
