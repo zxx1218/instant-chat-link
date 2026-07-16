@@ -33,7 +33,7 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
   const [userId] = useState(() => generateUserId());
   const [roomName, setRoomName] = useState("临时聊天室");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const scrollToBottom = useCallback(() => {
