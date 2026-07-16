@@ -119,12 +119,31 @@ export function ChatHeader({ roomId, onlineCount, peerOnline, connectionStatus, 
               </button>
             </div>
           )}
-          <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1 sm:gap-1.5 truncate">
-            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
-            <span className="truncate">
-              {onlineCount} 在线 · <span className="opacity-70">#{roomId}</span>
-            </span>
-          </p>
+          <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground truncate">
+            {connectionStatus === "connected" ? (
+              <span className="flex items-center gap-1 shrink-0">
+                <span className={cn(
+                  "w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0",
+                  peerOnline ? "bg-green-500 animate-pulse" : "bg-muted-foreground/50"
+                )} />
+                <span className="text-foreground/80">
+                  {peerOnline ? "对方在线" : "等待对方加入"}
+                </span>
+              </span>
+            ) : connectionStatus === "connecting" ? (
+              <span className="flex items-center gap-1 shrink-0 text-amber-500">
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                正在连接...
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 shrink-0 text-destructive">
+                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-destructive shrink-0" />
+                连接已断开
+              </span>
+            )}
+            <span className="opacity-40 shrink-0">·</span>
+            <span className="truncate opacity-70">#{roomId}</span>
+          </div>
         </div>
       </div>
 
