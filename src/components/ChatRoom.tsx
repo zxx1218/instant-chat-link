@@ -45,7 +45,6 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
   }, [messages, isTyping, scrollToBottom]);
 
   useEffect(() => {
-    // Create realtime channel for this room
     const channel = supabase.channel(`room:${roomId}`, {
       config: {
         presence: {
@@ -56,7 +55,6 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
 
     channelRef.current = channel;
 
-    // Handle new messages
     channel.on("broadcast", { event: "message" }, ({ payload }) => {
       const newMessage: Message = {
         id: payload.id,
@@ -67,8 +65,7 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
         isRead: false,
       };
       setMessages((prev) => [...prev, newMessage]);
-      
-      // Send read receipt if message is from someone else
+
       if (payload.senderId !== userId) {
         channel.send({
           type: "broadcast",
@@ -78,7 +75,6 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
       }
     });
 
-    // Handle read receipts
     channel.on("broadcast", { event: "read" }, ({ payload }) => {
       if (payload.readerId !== userId) {
         setMessages((prev) =>
@@ -89,7 +85,6 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
       }
     });
 
-    // Handle typing indicator
     channel.on("broadcast", { event: "typing" }, ({ payload }) => {
       if (payload.senderId !== userId) {
         setIsTyping(true);
@@ -102,13 +97,11 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
       }
     });
 
-    // Handle presence for online count
     channel.on("presence", { event: "sync" }, () => {
       const state = channel.presenceState();
       setOnlineCount(Object.keys(state).length);
     });
 
-    // Handle room name changes
     channel.on("broadcast", { event: "roomName" }, ({ payload }) => {
       setRoomName(payload.name);
     });
@@ -144,7 +137,6 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
         payload: message,
       });
 
-      // Add message locally immediately
       setMessages((prev) => [
         ...prev,
         { ...message, timestamp: new Date(message.timestamp) },
@@ -171,7 +163,6 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
         payload: message,
       });
 
-      // Add message locally immediately
       setMessages((prev) => [
         ...prev,
         { ...message, timestamp: new Date(message.timestamp) },
@@ -192,7 +183,7 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
 
   const handleRoomNameChange = useCallback((name: string) => {
     if (!channelRef.current) return;
-    
+
     setRoomName(name);
     channelRef.current.send({
       type: "broadcast",
@@ -202,18 +193,18 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen max-w-2xl mx-auto p-4 gap-4">
-      <ChatHeader 
-        roomId={roomId} 
-        onlineCount={onlineCount} 
+    <div className="flex flex-col h-[100dvh] max-w-3xl mx-auto p-2 sm:p-4 gap-2 sm:gap-4">
+      <ChatHeader
+        roomId={roomId}
+        onlineCount={onlineCount}
         roomName={roomName}
         onRoomNameChange={handleRoomNameChange}
       />
-      
-      <div className="flex-1 overflow-y-auto scrollbar-thin space-y-3 px-1">
+
+      <div className="flex-1 overflow-y-auto scrollbar-thin space-y-2 sm:space-y-3 px-1 sm:px-2">
         {messages.length === 0 && (
           <div className="h-full flex items-center justify-center">
-            <div className="text-center text-muted-foreground">
+            <div className="text-center text-muted-foreground px-4">
               <p className="text-sm">等待消息...</p>
               <p className="text-xs mt-1">复制链接分享给对方开始聊天</p>
             </div>

@@ -36,7 +36,7 @@ export function ChatMessage({ content, isSelf, timestamp, isRead, file }: ChatMe
     >
       <div
         className={cn(
-          "max-w-[75%] px-4 py-2.5 rounded-2xl shadow-sm",
+          "max-w-[85%] sm:max-w-[75%] px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl shadow-sm",
           isSelf
             ? "bg-chat-self text-chat-self-foreground rounded-br-md"
             : "bg-chat-other text-chat-other-foreground rounded-bl-md"
