@@ -49,6 +49,9 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
   }, [messages, isTyping, scrollToBottom]);
 
   useEffect(() => {
+    let isActive = true;
+    setConnectionStatus("connecting");
+
     const channel = supabase.channel(`room:${roomId}`, {
       config: {
         presence: {
@@ -113,21 +116,28 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
     });
 
     channel.subscribe(async (status) => {
+      if (!isActive) return;
       if (status === "SUBSCRIBED") {
         setConnectionStatus("connected");
         await channel.track({ online_at: new Date().toISOString() });
       } else if (status === "CHANNEL_ERROR") {
         setConnectionStatus("error");
-      } else if (status === "TIMED_OUT" || status === "CLOSED") {
+      } else if (status === "TIMED_OUT") {
         setConnectionStatus("disconnected");
       }
+      // Ignore CLOSED: it fires during normal teardown/re-subscribe (e.g. StrictMode)
+      // and would incorrectly overwrite a live "connected" state on the receiver.
     });
 
     return () => {
+      isActive = false;
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
+      if (channelRef.current === channel) {
+        channelRef.current = null;
+      }
     };
   }, [roomId, userId]);
 
