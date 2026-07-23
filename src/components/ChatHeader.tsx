@@ -29,6 +29,8 @@ interface ChatHeaderProps {
 export function ChatHeader({
   roomId,
   onlineCount,
+  onlineUserIds,
+  selfUserId,
   peerOnline,
   connectionStatus,
   rawStatus,
@@ -112,15 +114,28 @@ export function ChatHeader({
           <ArrowLeft className="w-4 h-4" />
         </Button>
 
-        <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-          <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-          <span
-            className="absolute -bottom-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center ring-2 ring-background"
-            aria-label={`在线人数 ${onlineCount}`}
-          >
-            {onlineCount}
-          </span>
-        </div>
+        {onlineUserIds.length > 0 ? (
+          <div className="flex -space-x-2 shrink-0" aria-label={`在线用户 ${onlineCount}`}>
+            {onlineUserIds.slice(0, 4).map((uid) => (
+              <UserAvatarBadge
+                key={uid}
+                userId={uid}
+                size="sm"
+                showRing
+                title={uid === selfUserId ? "我" : `用户 ${uid.slice(0, 6)}`}
+              />
+            ))}
+            {onlineUserIds.length > 4 && (
+              <div className="w-6 h-6 rounded-full bg-muted text-muted-foreground text-[10px] font-semibold flex items-center justify-center ring-2 ring-background shrink-0">
+                +{onlineUserIds.length - 4}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+          </div>
+        )}
 
         <div className="min-w-0 flex-1">
           {isEditing ? (
