@@ -38,6 +38,7 @@ const PRESENCE_TIMEOUT_MS = 30_000;
 export function ChatRoom({ roomId }: ChatRoomProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [onlineCount, setOnlineCount] = useState(1);
+  const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
   const [peerOnline, setPeerOnline] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<
     "connecting" | "connected" | "disconnected" | "error"
@@ -155,6 +156,7 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
       const state = channel.presenceState();
       const keys = Object.keys(state);
       setOnlineCount(keys.length);
+      setOnlineUserIds(keys);
       setPeerOnline(keys.some((k) => k !== userId));
       prevPeersRef.current = new Set(keys);
     });
@@ -291,6 +293,8 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
         <ChatHeader
           roomId={roomId}
           onlineCount={onlineCount}
+          onlineUserIds={onlineUserIds}
+          selfUserId={userId}
           peerOnline={peerOnline}
           connectionStatus={connectionStatus}
           rawStatus={rawStatus}
