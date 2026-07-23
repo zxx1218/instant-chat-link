@@ -7,10 +7,13 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ChatThemePicker } from "./ChatThemePicker";
 import { ConnectionDiagnostics, type ConnStatus } from "./ConnectionDiagnostics";
+import { UserAvatarBadge } from "./UserAvatarBadge";
 
 interface ChatHeaderProps {
   roomId: string;
   onlineCount: number;
+  onlineUserIds: string[];
+  selfUserId: string;
   peerOnline: boolean;
   connectionStatus: ConnStatus;
   rawStatus: string;
