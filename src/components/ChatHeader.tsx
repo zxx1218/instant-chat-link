@@ -5,17 +5,38 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ChatThemePicker } from "./ChatThemePicker";
+import { ConnectionDiagnostics, type ConnStatus } from "./ConnectionDiagnostics";
 
 interface ChatHeaderProps {
   roomId: string;
   onlineCount: number;
   peerOnline: boolean;
-  connectionStatus: "connecting" | "connected" | "disconnected" | "error";
+  connectionStatus: ConnStatus;
+  rawStatus: string;
+  connectedSince: number | null;
+  presenceEvents: { at: number; text: string }[];
+  timeoutMs: number;
   roomName: string;
   onRoomNameChange: (name: string) => void;
+  themeId: string;
+  onThemeChange: (id: string) => void;
 }
 
-export function ChatHeader({ roomId, onlineCount, peerOnline, connectionStatus, roomName, onRoomNameChange }: ChatHeaderProps) {
+export function ChatHeader({
+  roomId,
+  onlineCount,
+  peerOnline,
+  connectionStatus,
+  rawStatus,
+  connectedSince,
+  presenceEvents,
+  timeoutMs,
+  roomName,
+  onRoomNameChange,
+  themeId,
+  onThemeChange,
+}: ChatHeaderProps) {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -53,7 +74,6 @@ export function ChatHeader({ roomId, onlineCount, peerOnline, connectionStatus, 
 
   const copyLink = async () => {
     const link = `${window.location.origin}/chat/${roomId}`;
-
     try {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(link);
@@ -62,7 +82,6 @@ export function ChatHeader({ roomId, onlineCount, peerOnline, connectionStatus, 
         textArea.value = link;
         textArea.style.position = "fixed";
         textArea.style.left = "-999999px";
-        textArea.style.top = "-999999px";
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
@@ -72,9 +91,8 @@ export function ChatHeader({ roomId, onlineCount, peerOnline, connectionStatus, 
       setCopied(true);
       toast.success("链接已复制！发送给对方即可开始聊天");
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch {
       toast.error("复制失败，请手动复制链接");
-      console.error("复制失败:", err);
     }
   };
 
@@ -91,8 +109,14 @@ export function ChatHeader({ roomId, onlineCount, peerOnline, connectionStatus, 
           <ArrowLeft className="w-4 h-4" />
         </Button>
 
-        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+        <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
           <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+          <span
+            className="absolute -bottom-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center ring-2 ring-background"
+            aria-label={`在线人数 ${onlineCount}`}
+          >
+            {onlineCount}
+          </span>
         </div>
 
         <div className="min-w-0 flex-1">
@@ -123,10 +147,12 @@ export function ChatHeader({ roomId, onlineCount, peerOnline, connectionStatus, 
           <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground truncate">
             {connectionStatus === "connected" ? (
               <span className="flex items-center gap-1 shrink-0">
-                <span className={cn(
-                  "w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0",
-                  peerOnline ? "bg-green-500 animate-pulse" : "bg-muted-foreground/50"
-                )} />
+                <span
+                  className={cn(
+                    "w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0",
+                    peerOnline ? "bg-green-500 animate-pulse" : "bg-muted-foreground/50"
+                  )}
+                />
                 <span className="text-foreground/80">
                   {peerOnline ? "对方在线" : "等待对方加入"}
                 </span>
@@ -143,29 +169,43 @@ export function ChatHeader({ roomId, onlineCount, peerOnline, connectionStatus, 
               </span>
             )}
             <span className="opacity-40 shrink-0">·</span>
-            <span className="truncate opacity-70">#{roomId}</span>
+            <span className="shrink-0 opacity-80">{onlineCount} 在线</span>
+            <span className="opacity-40 shrink-0 hidden sm:inline">·</span>
+            <span className="truncate opacity-70 hidden sm:inline">#{roomId}</span>
           </div>
         </div>
       </div>
 
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={copyLink}
-        className="gap-1.5 sm:gap-2 shrink-0 h-8 sm:h-9 px-2.5 sm:px-3 text-xs sm:text-sm"
-      >
-        {copied ? (
-          <>
-            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden xs:inline sm:inline">已复制</span>
-          </>
-        ) : (
-          <>
-            <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden xs:inline sm:inline">复制链接</span>
-          </>
-        )}
-      </Button>
+      <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+        <ConnectionDiagnostics
+          status={connectionStatus}
+          rawStatus={rawStatus}
+          connectedSince={connectedSince}
+          onlineCount={onlineCount}
+          peerOnline={peerOnline}
+          events={presenceEvents}
+          timeoutMs={timeoutMs}
+        />
+        <ChatThemePicker themeId={themeId} onChange={onThemeChange} />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={copyLink}
+          className="gap-1.5 sm:gap-2 h-8 sm:h-9 px-2.5 sm:px-3 text-xs sm:text-sm ml-1"
+        >
+          {copied ? (
+            <>
+              <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">已复制</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">复制链接</span>
+            </>
+          )}
+        </Button>
+      </div>
     </header>
   );
 }
