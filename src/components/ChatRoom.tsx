@@ -312,16 +312,22 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
               </div>
             </div>
           )}
-          {messages.map((message) => (
-            <ChatMessage
-              key={message.id}
-              content={message.content}
-              isSelf={message.senderId === userId}
-              timestamp={message.timestamp}
-              file={message.file}
-              isRead={message.isRead}
-            />
-          ))}
+          {messages.map((message, idx) => {
+            const prev = messages[idx - 1];
+            const showSender = !prev || prev.senderId !== message.senderId;
+            return (
+              <ChatMessage
+                key={message.id}
+                content={message.content}
+                isSelf={message.senderId === userId}
+                senderId={message.senderId}
+                showSender={showSender}
+                timestamp={message.timestamp}
+                file={message.file}
+                isRead={message.isRead}
+              />
+            );
+          })}
           {isTyping && <TypingIndicator />}
           <div ref={messagesEndRef} />
         </div>
