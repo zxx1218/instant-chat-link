@@ -56,6 +56,14 @@ export function ChatHeader({
 }: ChatHeaderProps) {
 
   const navigate = useNavigate();
+  const rosterIds = useMemo(() => {
+    const ids = [...onlineUserIds];
+    Object.keys(unreadBySender).forEach((id) => {
+      if ((unreadBySender[id] ?? 0) > 0 && !ids.includes(id)) ids.push(id);
+    });
+    return ids;
+  }, [onlineUserIds, unreadBySender]);
+
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(roomName);
