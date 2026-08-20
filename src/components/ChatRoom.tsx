@@ -65,9 +65,12 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const listRef = useRef<HTMLDivElement>(null);
+  const atBottomRef = useRef(true);
+  const typingTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const prevPeersRef = useRef<Set<string>>(new Set());
+
 
   const theme = useMemo(() => getTheme(themeId), [themeId]);
 
