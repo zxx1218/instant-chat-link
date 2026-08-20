@@ -137,12 +137,20 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
       setMessages((prev) => [...prev, newMessage]);
 
       if (payload.senderId !== userId) {
+        setTypingUsers((prev) => prev.filter((u) => u !== payload.senderId));
+        if (!atBottomRef.current) {
+          setUnreadBySender((prev) => ({
+            ...prev,
+            [payload.senderId]: (prev[payload.senderId] ?? 0) + 1,
+          }));
+        }
         channel.send({
           type: "broadcast",
           event: "read",
           payload: { messageIds: [payload.id], readerId: userId },
         });
       }
+
     });
 
     channel.on("broadcast", { event: "read" }, ({ payload }) => {
