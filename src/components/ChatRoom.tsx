@@ -4,6 +4,9 @@ import { ChatHeader } from "./ChatHeader";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
 import { TypingIndicator } from "./TypingIndicator";
+import { UserAvatarBadge } from "./UserAvatarBadge";
+import { ArrowDown } from "lucide-react";
+
 import { generateUserId } from "@/lib/generateRoomId";
 import { DEFAULT_THEME_ID, getTheme } from "@/lib/chatThemes";
 import { toast } from "sonner";
