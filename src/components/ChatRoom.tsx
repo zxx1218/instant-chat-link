@@ -164,12 +164,17 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
     });
 
     channel.on("broadcast", { event: "typing" }, ({ payload }) => {
-      if (payload.senderId !== userId) {
-        setIsTyping(true);
-        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-        typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 2000);
+      const sender: string = payload.senderId;
+      if (sender !== userId) {
+        setTypingUsers((prev) => (prev.includes(sender) ? prev : [...prev, sender]));
+        if (typingTimersRef.current[sender]) clearTimeout(typingTimersRef.current[sender]);
+        typingTimersRef.current[sender] = setTimeout(() => {
+          setTypingUsers((prev) => prev.filter((u) => u !== sender));
+          delete typingTimersRef.current[sender];
+        }, 2500);
       }
     });
+
 
     channel.on("broadcast", { event: "roomName" }, ({ payload }) => {
       setRoomName(payload.name);
