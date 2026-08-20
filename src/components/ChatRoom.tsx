@@ -94,13 +94,22 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
     [roomId]
   );
 
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
+  }, []);
+
+  const handleListScroll = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    atBottomRef.current = atBottom;
+    if (atBottom) setUnreadBySender({});
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping, scrollToBottom]);
+    if (atBottomRef.current) scrollToBottom();
+  }, [messages, typingUsers, scrollToBottom]);
+
 
   useEffect(() => {
     let isActive = true;
