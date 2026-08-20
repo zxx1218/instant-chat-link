@@ -24,7 +24,12 @@ interface ChatHeaderProps {
   onRoomNameChange: (name: string) => void;
   themeId: string;
   onThemeChange: (id: string) => void;
+  unreadBySender?: Record<string, number>;
+  typingUserIds?: string[];
+  filterUserId?: string | null;
+  onFilterUser?: (userId: string) => void;
 }
+
 
 export function ChatHeader({
   roomId,
