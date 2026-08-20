@@ -1,13 +1,16 @@
 import { Copy, Check, Users, Pencil, ArrowLeft } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getUserAvatar, getUserLabel } from "@/lib/userAvatar";
 import { ChatThemePicker } from "./ChatThemePicker";
 import { ConnectionDiagnostics, type ConnStatus } from "./ConnectionDiagnostics";
 import { UserAvatarBadge } from "./UserAvatarBadge";
+
 
 interface ChatHeaderProps {
   roomId: string;
