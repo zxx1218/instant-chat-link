@@ -302,6 +302,31 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
     });
   }, []);
 
+  const toggleFilterUser = useCallback((uid: string) => {
+    setFilterUserId((prev) => (prev === uid ? null : uid));
+    setUnreadBySender((prev) => {
+      const next = { ...prev };
+      delete next[uid];
+      return next;
+    });
+  }, []);
+
+  const visibleMessages = useMemo(
+    () => (filterUserId ? messages.filter((m) => m.senderId === filterUserId) : messages),
+    [messages, filterUserId]
+  );
+
+  const totalUnread = useMemo(
+    () => Object.values(unreadBySender).reduce((a, b) => a + b, 0),
+    [unreadBySender]
+  );
+
+  const jumpToLatest = useCallback(() => {
+    atBottomRef.current = true;
+    setUnreadBySender({});
+    scrollToBottom();
+  }, [scrollToBottom]);
+
   const themeStyle = useMemo(
     () =>
       ({
@@ -335,36 +360,82 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
           onRoomNameChange={handleRoomNameChange}
           themeId={themeId}
           onThemeChange={changeTheme}
+          unreadBySender={unreadBySender}
+          typingUserIds={typingUsers}
+          filterUserId={filterUserId}
+          onFilterUser={toggleFilterUser}
         />
 
-        <div className="flex-1 overflow-y-auto scrollbar-thin space-y-2 sm:space-y-3 px-1 sm:px-2">
-          {messages.length === 0 && (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center text-muted-foreground px-4">
-                <p className="text-sm">等待消息...</p>
-                <p className="text-xs mt-1">复制链接分享给对方开始聊天</p>
+        {filterUserId && (
+          <button
+            onClick={() => setFilterUserId(null)}
+            className="glass rounded-xl px-3 py-2 text-xs flex items-center justify-between gap-2 hover:bg-muted/40 transition-colors"
+          >
+            <span className="flex items-center gap-2 min-w-0">
+              <UserAvatarBadge userId={filterUserId} size="sm" />
+              <span className="truncate">
+                只看 {filterUserId === userId ? "我" : `用户 ${filterUserId.slice(0, 4)}`} 的消息
+                （{visibleMessages.length} 条）
+              </span>
+            </span>
+            <span className="shrink-0 text-primary">显示全部</span>
+          </button>
+        )}
+
+        <div className="relative flex-1 min-h-0">
+          <div
+            ref={listRef}
+            onScroll={handleListScroll}
+            className="h-full overflow-y-auto scrollbar-thin space-y-2 sm:space-y-3 px-1 sm:px-2"
+          >
+            {visibleMessages.length === 0 && (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center text-muted-foreground px-4">
+                  <p className="text-sm">{filterUserId ? "该成员还没有消息" : "等待消息..."}</p>
+                  <p className="text-xs mt-1">复制链接分享给对方开始聊天</p>
+                </div>
               </div>
-            </div>
+            )}
+            {visibleMessages.map((message, idx) => {
+              const prev = visibleMessages[idx - 1];
+              const showSender = !prev || prev.senderId !== message.senderId;
+              return (
+                <ChatMessage
+                  key={message.id}
+                  content={message.content}
+                  isSelf={message.senderId === userId}
+                  senderId={message.senderId}
+                  showSender={showSender}
+                  timestamp={message.timestamp}
+                  file={message.file}
+                  isRead={message.isRead}
+                />
+              );
+            })}
+            {typingUsers.length > 0 && !filterUserId && (
+              <TypingIndicator userIds={typingUsers} />
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {totalUnread > 0 && (
+            <button
+              onClick={jumpToLatest}
+              className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 rounded-full bg-primary text-primary-foreground shadow-lg px-3 py-1.5 text-xs font-medium flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2"
+            >
+              <span className="flex -space-x-1.5">
+                {Object.keys(unreadBySender)
+                  .slice(0, 3)
+                  .map((uid) => (
+                    <UserAvatarBadge key={uid} userId={uid} size="sm" showRing />
+                  ))}
+              </span>
+              {totalUnread} 条新消息
+              <ArrowDown className="w-3.5 h-3.5" />
+            </button>
           )}
-          {messages.map((message, idx) => {
-            const prev = messages[idx - 1];
-            const showSender = !prev || prev.senderId !== message.senderId;
-            return (
-              <ChatMessage
-                key={message.id}
-                content={message.content}
-                isSelf={message.senderId === userId}
-                senderId={message.senderId}
-                showSender={showSender}
-                timestamp={message.timestamp}
-                file={message.file}
-                isRead={message.isRead}
-              />
-            );
-          })}
-          {isTyping && <TypingIndicator />}
-          <div ref={messagesEndRef} />
         </div>
+
 
         <ChatInput
           onSendMessage={sendMessage}
