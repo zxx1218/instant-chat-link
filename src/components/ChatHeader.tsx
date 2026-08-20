@@ -46,7 +46,12 @@ export function ChatHeader({
   onRoomNameChange,
   themeId,
   onThemeChange,
+  unreadBySender = {},
+  typingUserIds = [],
+  filterUserId = null,
+  onFilterUser,
 }: ChatHeaderProps) {
+
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
