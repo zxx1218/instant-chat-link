@@ -46,9 +46,12 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
   const [rawStatus, setRawStatus] = useState<string>("INIT");
   const [connectedSince, setConnectedSince] = useState<number | null>(null);
   const [presenceEvents, setPresenceEvents] = useState<PresenceEvent[]>([]);
-  const [isTyping, setIsTyping] = useState(false);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [unreadBySender, setUnreadBySender] = useState<Record<string, number>>({});
+  const [filterUserId, setFilterUserId] = useState<string | null>(null);
   const [userId] = useState(() => generateUserId());
   const [roomName, setRoomName] = useState("临时聊天室");
+
   const [themeId, setThemeId] = useState<string>(() => {
     try {
       return (
