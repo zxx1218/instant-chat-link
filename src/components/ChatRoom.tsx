@@ -230,7 +230,9 @@ export function ChatRoom({ roomId }: ChatRoomProps) {
 
     return () => {
       isActive = false;
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      Object.values(typingTimersRef.current).forEach(clearTimeout);
+      typingTimersRef.current = {};
+
       supabase.removeChannel(channel);
       if (channelRef.current === channel) channelRef.current = null;
     };
